@@ -1,0 +1,33 @@
+.grow:hover {
+    -webkit-transform: scale(1.2);
+    -ms-transform: scale(1.2);
+    transform: scale(1.2);
+    transition: all 0.3s ease; 
+}
+
+.bg-gradient {
+    background:linear-gradient(-30deg, #4f70ce 0%, #7461a8 50%, #7461a8 100%);
+}
+
+.self-center {
+    align-self:center
+}
+
+.content-center {
+    justify-content: center;
+    align-content: center;
+}
+
+.social-icon {
+    width:40%;
+    display:block;
+}
+
+.card-icon {
+    width:50%;
+    display:block;
+}
+
+.shadow {
+    box-shadow: 0 5px 15px rgba(0,0,0,.5);
+}

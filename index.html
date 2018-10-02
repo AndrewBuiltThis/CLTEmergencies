@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<!--
+Application Name: CLT Emergencies
+Application Description: This is an application for Charlotte, NC to 
+	monitor weather emergencies in the area in real-time using public
+	facing web-services.
+Application Author: Andrew Valenski, AndrewBuiltThis
+Application Publish Date: 10/2/2018
+-->
+
+<!--This is the beginnning of the web-page-->
+<html lang="en">
+	<!--The head of the page contains the important title and metadata 
+	information for your site. Optionally, (as we do here), we also load
+	our stylesheets in the head of the document-->
+    <head>
+        <meta charset="utf=8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="description" content="The CLT Emergencies allows residents of Charlotte, NC to stay up-to-date on hazardous weather conditions in the Charlotte-Mecklenburg region.">
+		<meta name="keywords" content="clt,webapp, weather, hurricane, flood, charlotte, emergencies">
+		<meta name="robots" content="index,follow">
+		<meta name="geo.position" content="35;-80">
+		<meta name="geo.placename" content="Charlotte"> 
+		<meta name="geo.region" content="USA North Carolina">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>CLT Emergencies</title>
+        <link rel="stylesheet" href="style/css/main.css">
+        <link rel="stylesheet" href="style/css/bootstrap.css">
+        <link rel="stylesheet" href="https://js.arcgis.com/4.8/esri/css/main.css">
+    </head>
+
+    <body style="background-color:#212529">
+	<!--Start of Nav -->
+        <div class="container-fluid px-0 mb-2">
+            <nav class="navbar navbar-expand-lg navbar-dark border-bottom" >
+                <a class="navbar-brand" href="#">
+                    <strong style="color:#7461a8">CLT</strong>emergencies
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item">
+                           <a class="nav-link" href="https://forecast.weather.gov/MapClick.php?textField1=35.1975&amp;textField2=-80.8345#.W507gehKiUl" target="_blank">
+                                <img class="img-fluid mx-auto" width="15" height="15" src="style/images/svgs/weather.svg" >   
+                            National Weather Service</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="http://charlottenc.gov/emergency/Pages/default.aspx" target="_blank">
+                                    <img class="img-fluid mx-auto" width="20" height="20" src="style/images/svgs/government.svg" >
+                                City of Charlotte</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="http://www.cltairport.com/Pages/default.aspx">
+                                    <img class="img-fluid mx-auto" width="20" height="20" src="style/images/svgs/airport.svg" >
+                                CLT Airport</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://www.windy.com/?35.218,-80.786,5" target="_blank">
+                                    <img class="img-fluid mx-auto" width="20" height="20" src="style/images/svgs/windy.svg" >
+                                Windy</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://www.google.com/search?safe=off&amp;rlz=1C1JZAP_enUS703US703&amp;biw=1920&amp;bih=943&amp;tbm=nws&amp;ei=rRycW_2bKfK0gge5oqKgAQ&amp;q=charlotte+weather&amp;oq=charlotte+weather&amp;gs_l=psy-ab.3..0l9.43719.46519.0.47705.19.13.1.5.5.0.145.925.9j2.11.0....0...1c.1.64.psy-ab..2.16.877....0.m6LP-e-8SDA" target="_blank">
+                                    <img class="img-fluid mx-auto" width="20" height="20" src="style/images/svgs/localNews.svg" >
+                                    Local News</a> 
+                        </li>
+                        <li class="nav-item">
+                            <button class="btn btn-primary ml-4" data-toggle="modal" data-target="#feedbackModal"> 
+                                <img class="img-fluid mx-auto" width="20" height="20" src="style/images/svgs/feedback.svg" >
+                                App Feedback
+                        </li>                        
+                    </ul>
+                </div>
+            </nav>
+        </div>
+
+<!--End of Nav -->
+<!--Start of Top Row -->
+
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12 col-lg-6 col-xl-4">
+                    <div class="col-lg-12 mb-2">
+                        <div class="card bg-dark shadow">
+                            <div class="row">
+                                <div class="col-3 self-center">
+                                    <img id="warningIcon" class="img-fluid mx-auto card-icon" src="style/images/svgs/loading.svg" >
+                                </div>
+                                <div class="col-9">
+                                    <h5 id="warningHeading" class="card-title lead">
+                                        Talking to the National Weather Service
+                                    </h5>
+                                    <small id="warningDescription" class="card-text d-lg-none d-xl-block">
+                                        Give me a second to see what they have to say...
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 mb-2">
+                            <div class="card bg-dark shadow">
+                                <div class="row">
+									<div class="col-3 self-center">
+                                        <img class="img-fluid mx-auto card-icon" src="style/images/svgs/socialMedia.svg" >
+                                    </div>
+                                    <div class="col-9">
+                                        <h5 class="card-title lead text-center">
+                                            Follow Along with Social Media
+                                        </h5>
+                                        <div class="row">
+                                            <div class="col-4 self-center grow">
+                                                <a href="https://twitter.com/search?l=&q=near%3A%22Charlotte%2C%20NC%22%20within%3A15mi&src=typd&lang=en" target="_blank">
+                                                    <img class="img-fluid mx-auto social-icon" src="style/images/svgs/twitter.svg" > 
+                                                </a>   
+                                            </div>
+                                            <div class="col-4 self-center grow">
+                                                <a href="https://www.instagram.com/explore/locations/213141085/charlotte-north-carolina/?hl=en" target="_blank">
+                                                    <img class="img-fluid mx-auto social-icon" src="style/images/svgs//instagram.svg" > 
+                                                </a>   
+                                            </div>
+                                            <div class="col-4 self-center grow">
+                                                <a href="https://www.social-searcher.com/social-buzz/?q5=Charlotte%2C+CLT%2C+CharlotteNC%2C" target="_blank">
+                                                    <img class="img-fluid mx-auto social-icon" src="style/images/svgs//facebook.svg" >    
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <div class="row content-center">
+                        <div class="col-md-6 mb-2 h-100">
+                            <div class="card bg-dark shadow">
+                                    <div class="card-header bg-gradient">Today in CLT</div>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item small bg-dark"><strong>How's it looking?  </strong><span id="shortForecast" style="float:right"></span></li>
+                                    <li class="list-group-item small bg-dark"><strong>Is it hot?  </strong><span id="currentTemp" style="float:right"></span> *F</li>
+                                    <li class="list-group-item small bg-dark"><strong>Is it windy?  </strong><span id="currentWind" style="float:right"></span></li>
+                                </ul>
+                                <div class="card-body">
+                                    <button id="forecastButton" type="button" class="btn btn-outline-primary" data-toggle="popover" data-trigger="focus" title="Today's Forecast" data-content="Loading...">More Info</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-2 h-100">
+                            <div class="card bg-dark shadow">
+                                <div class="card-header bg-gradient">CLT Power Outages</div>
+                                <ul class="list-group list-group-flush ">
+                                    <li id="liveOutages" class="list-group-item small bg-dark">Fetching Data...</li>
+                                </ul>
+                                <div class="card-body">
+                                    <button type="button" class="btn btn-outline-primary" data-toggle="popover" data-trigger="focus" title="How Do I Know This?" data-content="There is an amazing resource called PowerOutage.US that built a composite tool to analyze outage data. I'm getting this data from them!">More Info</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-12 col-lg-6 col-xl-8">
+                    <div class="col-12 pb-2 h-100 shadow" id="viewDiv">
+                        <!--The viewDiv is where the Esri JS API map is loaded-->
+                    </div>
+                </div>
+            </div>
+
+<!--End of Top Row -->
+<!--Start of Bottom Row -->
+
+            <div class="row">
+                <div class="col-md-6 col-xl-3 mt-2">
+                    <div class="card bg-dark h-100 shadow">
+                        <h3 class="card-title lead text-center">Staying Safe</h3>
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">Weather emergencies can be scary. Here are some solid resources to help you weather the storm (pun intended).</h6>
+                            <small class="card-text">
+                                <ul>
+                                    <li>The <a href="https://www.weather.gov/safety/" target="_blank" class="text-warning">National Weather Service</a> has an entire portion of their website dedicated to staying safe during weather emergencies.</li>
+                                    <li><a href="https://www.fema.gov/preparedness-checklists-toolkits" target="_blank" class="text-warning">FEMA</a> provides an easy to uese, up-to-date and thourough checklist for getting and staying prepared for inclement weather.</li>
+                                    <li><a href="https://www.ready.gov/" target="_blank" class="text-warning">Ready.gov</a> is a national program dedicated to ensuring that you stay and reamin, you guessed it, safe.</li>
+                                </ul>
+                            </small>
+                            <div class="row">
+                                <div class="col-6 self-center">
+                                    <h6>Want Live Updates?</h6>
+                                </div>
+                                <div class="col-6">
+                                        <a href="http://charmeckalerts.org/" target="_blank" class="btn btn-outline-primary">Register Here</a>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3 mt-2">
+                    <div class="card bg-dark h-100 shadow">
+                        <h5 class="card-title lead text-center">Getting Help</h5>
+                        <div class="row px-2">
+                            <div class="col-4">
+                                <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                                    <a class="nav-link active" id="v-pills-resources-tab" data-toggle="pill" href="#v-pills-resources" role="tab" aria-controls="v-pills-resources" aria-selected="true">Info</a>
+                                    <a class="nav-link" id="v-pills-issues-tab" data-toggle="pill" href="#v-pills-issues" role="tab" aria-controls="v-pills-issues" aria-selected="false">Issues</a>
+                                    <a class="nav-link" id="v-pills-danger-tab" data-toggle="pill" href="#v-pills-danger" role="tab" aria-controls="v-pills-danger" aria-selected="false">Danger</a>
+                                    <a class="nav-link" id="v-pills-contact-tab" data-toggle="pill" href="#v-pills-contact" role="tab" aria-controls="v-pills-contact" aria-selected="false">Contact</a>
+                                </div>
+                            </div>
+                            <div class="col-8">
+                                <div class="tab-content" id="v-pills-tabContent">
+                                    <div class="tab-pane fade show active" id="v-pills-resources" role="tabpanel" aria-labelledby="v-pills-resources-tab">
+                                        <small class="">Here are some of my favorite resources to learn about the storm and get the answers you really want are below:</small>
+                                        <br />
+                                        <br />
+                                        <div class="row mx-1 content-center">
+                                            <div class="col-4">
+                                                <a href="https://twitter.com/esportillo?lang=en" target="_blank" class="btn btn-outline-info ">News</a>
+                                            </div>
+                                            <div class="col-4">
+                                                <a href="https://www.windy.com/?35.253,-80.693,5" target="_blank" class="btn btn-outline-secondary">Storms</a>
+                                            </div>
+                                            <div class="col-4">
+                                                <a href="https://servicerequest.charlottenc.gov/" target="_blank" class="btn btn-outline-info">Help</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade" id="v-pills-issues" role="tabpanel" aria-labelledby="v-pills-issus-tab">
+                                        <p class="">During extreme weather events, you may need to report issues such as down trees, power-outages or flooded streets. You can do that all online.</p>
+                                        <a href="https://servicerequest.charlottenc.gov/" class="btn btn-outline-primary" target="_blank">Report an Issue</a>
+                                    </div>
+                                    <div class="tab-pane fade" id="v-pills-danger" role="tabpanel" aria-labelledby="v-pills-messages-danger">
+                                        <p class="">If you or others are in immediate danger, do not hesitate and call 9-1-1.</p>
+                                        <a href="#" class="btn btn-outline-danger">Call 9-1-1</a>
+                                    </div>
+                                    <div class="tab-pane fade" id="v-pills-contact" role="tabpanel" aria-labelledby="v-pills-settings-contact">
+                                        <table class="table table-striped table-sm table-hover text-center">
+                                            <thead>
+                                                <tr>
+                                                    <th class="w-25">Group</th>
+                                                    <th class="w-25">Contact</th>
+                                                    <th>Twitter</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>CLT</td>
+                                                    <td class="">
+                                                        <a href="https://servicerequest.charlottenc.gov/service" target="_blank">
+                                                            <i class="fa fa-5x d-inline lead fa-bullhorn"></i>
+                                                        </a>
+                                                    </td>
+                                                    <td>
+                                                        <a href="https://twitter.com/CLTgov?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eserp%7Ctwgr%5Eauthor" target="_blank">
+                                                            <i class="d-block  fa fa-5x lead fa-twitter"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>NC</td>
+                                                    <td>
+                                                        <a href="https://www.nc.gov/contact" target="_blank">
+                                                            <i class="fa fa-5x d-inline lead fa-bullhorn"></i>
+                                                        </a>
+                                                    </td>
+                                                    <td>
+                                                        <a href="https://twitter.com/NCEmergency" target="_blank">
+                                                            <i class="d-block  fa fa-5x lead fa-twitter"></i>
+                                                          </a>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>US</td>
+                                                    <td>
+                                                        <a href="https://www.usa.gov/contact" target="_blank">
+                                                            <i class="fa fa-5x d-inline lead fa-bullhorn"></i>
+                                                        </a>
+                                                    </td>
+                                                    <td>
+                                                        <a href="https://twitter.com/USAgov?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eserp%7Ctwgr%5Eauthor" target="_blank">
+                                                            <i class="d-block  fa fa-5x lead fa-twitter"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3 mt-2">
+                    <div class="card bg-dark h-100 shadow">
+                        <h5 class="card-title lead text-center">Time Lapse Radar</h5>
+                        <div class="card-body px-2 h-100">
+                            <iframe class="h-100 w-100" src="https://embed.windy.com/embed2.html?lat=35.200&amp;lon=-80.829&amp;zoom=10&amp;level=surface&amp;overlay=rain&amp;menu=&amp;message=true&amp;marker=true&amp;calendar=&amp;pressure=&amp;type=map&amp;location=coordinates&amp;detail=&amp;detailLat=35.248&amp;detailLon=-80.829&amp;metricWind=mph&amp;metricTemp=%C2%B0F&amp;radarRange=-1"
+                                frameborder="0"></iframe>
+                        </div>
+                    </div>    
+                </div>
+                <div class="col-md-6 col-lg-6 col-xl-3 mt-2">
+                    <div class="card bg-dark h-100 shadow">
+                        <h5 class="card-title lead text-center"><strong>CLT</strong>emergencies</h5>
+                        <div class="list-group p-2">
+                            <a href="#" class="list-group-item list-group-item-action flex-column align-items-start active bg-gradient" >
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">
+                                        Hello and Welcome!
+                                    </h5>
+                                    <small>Updated 9/19/2018</small>
+                                </div>
+                                <small class="mb-1">This is the City of Charlotte's emergency response dashboard. The application is intended to suport both decision making and community engagement for area during major weather events.</small>
+                             </a>
+                            <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
+                                <p class="mb-1">Like this dashboard? Me too.</p>
+                                <small class="text-muted">Check out some more of my work using the below button.</small>
+                                <a href="http://AndrewBuiltThis.com" target="_blank" class="btn btn-primary">Andrew Built This</a>
+                            </a>
+                        </div>          
+                    </div>
+                </div>
+            </div>
+        <div class="modal fade" id="feedbackModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" style="display: none;" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Good News/Bad News</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true"></span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        While I would love to hear your glowing, ego-reinforcing and hyperbolic <s>praise</s> feedback, I haven't built out this functionality yet.
+		                <br>
+		                <br>
+		                I know, it's a pretty serious let down for both of us. <b> However </b>, you can reach me (Andrew Valenski) via <a href="mailto:Andrew.Valenski@charlottenc.gov?Subject=Wow, Your Emergency Dashboard is Fire">email</a>!
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Alright, <i>fine</i>.</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+		
+
+        
+        <!--Importing JQuery dependency-->
+        <script src="resources/jQuery.js"></script>
+        <!--Importing Popper dependecy-->
+        <script src="resources/popper.js"></script>
+        <!--Importing Bootstrap JS-->
+        <script src="resources/bootstrap.js"></script>
+
+        <!--Initiatlize Popovers-->
+        <script>
+            $("[data-toggle=popover]").popover();
+            $('.popover-dismiss').popover({
+                trigger: 'focus'
+            });
+        </script>
+
+        <!--Update the Warning Headers and the Temperature Card-->
+        <script>
+                $(document).ready(function loadConditions() {
+                  $.ajax({
+                      url:'https://api.weather.gov/alerts/active/zone/NCZ071',
+                      complete: function (response) {
+                                     var outJSON = (JSON.parse(response.responseText));
+                          if (outJSON.features.length > 0) {
+                            $('#warningHeading').html(outJSON.features[0].properties.event)
+                            $('#warningDescription').html(outJSON.features[0].properties.headline)
+                            $('#warningIcon').attr("src","style/images/svgs/warning.svg");
+                          }
+                          else {
+                            $('#warningHeading').html('Great News! No Warnings!')
+                            $('#warningDescription').html('According to the National Weather Service, there are no watches, warnings or advisories for the Charlotte-Mecklenburg Region.')
+                            $('#warningIcon').attr("src","style/images/svgs/check.svg");
+                          }
+                      },
+                      error: function () {
+                          $('#warningHeading').html('Oh no! It looks like something went wrong :(');
+                          $('#warningDescription').html('I am really sorry about this. I will look into this and try to be useful. Check back later!');
+                          $('#warningIcon').attr("src","style/images/svgs/sad.svg");
+                      },
+                  });
+                      $.ajax({
+                      url:'https://api.weather.gov/gridpoints/GSP/118,64/forecast',
+                      complete: function (response) {
+                          var outJSON = (JSON.parse(response.responseText));
+                          $('#shortForecast').html(outJSON.properties.periods[0].shortForecast)
+                          $('#currentTemp').html(outJSON.properties.periods[0].temperature)
+                          $('#currentWind').html(outJSON.properties.periods[0].windSpeed)
+                          $('#forecastButton').attr("data-content",outJSON.properties.periods[0].detailedForecast);
+                      },
+                      error: function () {
+                        $('#warningHeading').html('Oh no! It looks like something went wrong :(');
+                        $('#warningDescription').html('I am really sorry about this. I will look into this and try to be useful. Check back later!');
+                        $('#warningIcon').attr("src","style/images/svgs/sad.svg");
+                      },
+                  });
+                  return false;
+              });
+        </script>
+
+        <!--Populate the Outage Card with data from Poweroutage.us-->
+        <script>
+            $('#liveOutages').load('https://poweroutage.us/area/county/493 .row .col-xs-6 ');
+        </script>
+
+        <!--Importing Esri's JS API Components-->
+        <script src="https://js.arcgis.com/4.8/"></script>
+        <script>
+          require([
+            "esri/layers/FeatureLayer",
+            "esri/layers/MapImageLayer",
+            "esri/layers/GroupLayer",
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/widgets/Expand",
+            "esri/widgets/LayerList",
+            "esri/widgets/Search",
+            "dojo/domReady!"
+          ], function(FeatureLayer, MapImageLayer, GroupLayer, Map, MapView, Expand, LayerList, Search) {
+          
+              // These are global variables that are defined for subsequent functions
+            // to populate.
+          var waterLevelLayer;
+          var url = "https://waterservices.usgs.gov/nwis/iv/?countyCd=37119&parameterCd=00065&indent=on&format=json";
+          var features = [];
+      
+            // Here we're defining the data schema of the input JSON array so we can 
+            // construct the graphicLayer in a consistent manner.
+          var fields = [
+              {
+                name: "OID",
+                alias: "ObjectID",
+                type: "oid"
+              }, {
+                name: "siteName",
+                alias: "Site Name",
+                type: "string"
+              }, {
+                name: "waterLevel",
+                alias: "Water Level",
+                type: "double"
+              }, {
+                name: "collectionDate",
+                alias: "Collection Datetime",
+                type: "string"
+              },{
+                name: "Latitude",
+                alias: "Latitude",
+                type: "double"
+              }, {
+                name: "Longitude",
+                alias: "Longitude",
+                type: "double"
+              }
+            ];
+            
+            // Since we're going to be using a continous-size renderer for the gauge layer
+            // we'll create the base symbology that can be scaled from there
+            var baseSymbology = {
+              type: "simple-marker", 
+              color: "#4fe3f7",
+              outline: { 
+                color: [79, 98, 247, 0.4],
+                width: 5
+              }
+            };
+            
+          // Here we're defining the rendering rules for the stream gauge layer
+          var waterRenderer = {
+              type: "simple", 
+              symbol: baseSymbology,
+              visualVariables: [{
+                type: "size",
+                field: "waterLevel",
+                legendOptions: {
+                  title: "Current Stream Water Levels"
+                },
+                stops: [
+                {
+                  value: 2.00,
+                  size: 5,
+                  label: "Under 2 Feet"
+                },
+                {
+                  value: 4.00,
+                  size: 10,
+                  label: "Between 2-4 Feet"
+                },
+                {
+                  value: 6.00,
+                  size: 20,
+                  label: "Between 4-6 Feet"
+                },
+                {
+                  value: 8.00,
+                  size: 30,
+                  label: "Between 6-8 Feet"
+                },
+                {
+                  value: 10.00,
+                  size: 40,
+                  label: "Between 8-10 Feet"
+                },
+                {
+                  value: 100.00,
+                  size: 50,
+                  label: "Over 10 Feet"
+                }]
+              }]
+            };
+      
+            // Here we're defining the Popup Template within the Web Map element. 
+            // This allows us to only render the relevant information from our JSON.
+          var waterLevelPopupTemplate = {
+              title: "{siteName}",
+              content:[{
+                type: "fields",
+                  fieldInfos: [
+                    {
+                      fieldName: "siteName",
+                      label: "Sample Site Name",
+                      visible: false
+                    },{
+                      fieldName: "waterLevel",
+                      label: "Measured Water Level (feet)",
+                      visible: true
+                    },{
+                      fieldName: "collectionDate",
+                      label: "Collection Datetime",
+                      visible: true
+                    }
+            ]
+              }]
+            };
+            
+          // Here we're specifying the popup template for our street closure layer
+          var streetClosurePopupTemplate = {
+              title: "{BLOCKNM}",
+              content:[{
+                type: "fields",
+                  fieldInfos: [
+                    {
+                      fieldName: "BLOCKNM",
+                      label: "Closure Location",
+                      visible: true
+                    },{
+                      fieldName: "LOCDESC",
+                      label: "Location Description",
+                      visible: true
+                    },{
+                      fieldName: "COMMENT",
+                      label: "Closure Cause",
+                      visible: true
+                    },{
+                      fieldName: "ACTIVE",
+                      label: "Active Closure",
+                      visible: true
+                    },{
+                      fieldName: "CONTACT",
+                      label: "Contact Information",
+                      visible: true
+                    }
+                  ]
+              }]
+            };
+            
+          // Here we're specifying the popup template for our alert group layer
+          var noaaPopupTemplate = {
+              title: "{prod_type}",
+              content:[{
+                type: "fields",
+                  fieldInfos: [
+                    {
+                      fieldName: "prod_type",
+                      label: "Alert Type",
+                      visible: true
+                    }
+                  ]
+              }]
+            };
+
+           /* This section is commented out as post-hurricane, Esri has locked down its emergency Waze feed.
+          // Waze Accidents in Charlotte 
+          var wazeAccidents = new FeatureLayer({
+            url: "https://services.arcgis.com/DO4gTjwJVIJ7O9Ca/arcgis/rest/services/Live_Waze_Alerts_Hurricane_Florence/FeatureServer/0",
+            title: "Traffic Accidents (Waze)",
+            minScale: 100000,
+            opacity: 0.95
+            });
+            */
+
+          // Here we're defining the rendering rules for our street closure layer
+          var closureRenderer = {
+            type: "simple",
+            popupTemplate: streetClosurePopupTemplate,
+            symbol: {
+              type: "simple-line", 
+              width: 1.5,
+              color: [255, 0, 67]
+            }
+          };
+      
+          // NOAA Radar feed for Charlotte 
+          var radarImagery = new MapImageLayer({
+                url: "https://nowcoast.noaa.gov/arcgis/rest/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer",
+                title: "NOAA Radar Feed",
+                minScale: 2000000,
+                sublayers: [ {
+                  id: 3,
+                  title: "Radar Imagery"
+                }],
+                opacity: 0.5
+              });
+            
+          // Street Closures Accidents in Charlotte 
+          var streetClosures = new FeatureLayer({
+            url: "https://gis.charlottenc.gov/arcgis/rest/services/CDOT/StreetClosuresAndDetours/MapServer/0",
+                  title: "Street Closures",
+            opacity: 0.75,
+            renderer: closureRenderer
+            });
+            
+          // Create inputs for GroupLayer  
+          var flashFloodLayer = new FeatureLayer({
+                  title: "Flash Flood Warning",
+                  name: "Flash Flood Warning Zone",
+                  url: "https://nowcoast.noaa.gov/arcgis/rest/services/nowcoast/wwa_meteoceanhydro_shortduration_hazards_warnings_time/MapServer/4",
+                  popupTemplate: noaaPopupTemplate,
+                  opacity: 0.15
+                });
+          var thunderLayer = new FeatureLayer({
+                  title: "Severe Thunderstorm Warning",
+                  url: "https://nowcoast.noaa.gov/arcgis/rest/services/nowcoast/wwa_meteoceanhydro_shortduration_hazards_warnings_time/MapServer/3",
+                  popupTemplate: noaaPopupTemplate,
+                  opacity: 0.15
+                });
+          var windLayer = new FeatureLayer({
+                  title: "Extreme Wind Warning",
+                  url: "https://nowcoast.noaa.gov/arcgis/rest/services/nowcoast/wwa_meteoceanhydro_shortduration_hazards_warnings_time/MapServer/2",
+                  popupTemplate: noaaPopupTemplate,
+                  opacity: 0.15
+                });
+          var tornadoLayer = new FeatureLayer({
+                  title: "Tornado Warning",
+                  url: "https://nowcoast.noaa.gov/arcgis/rest/services/nowcoast/wwa_meteoceanhydro_shortduration_hazards_warnings_time/MapServer/1",
+                  popupTemplate: noaaPopupTemplate,
+                  opacity: 0.15
+                });
+          var floodLayer = new FeatureLayer({
+                  title: "Flood Hazard",
+                  url: "https://nowcoast.noaa.gov/arcgis/rest/services/nowcoast/wwa_meteoceanhydro_longduration_hazards_time/MapServer/19",
+                  popupTemplate: noaaPopupTemplate,
+                  opacity: 0.15
+                });
+          var snowLayer = new FeatureLayer({
+                  title: "Snow/ Frost Hazard",
+                  url: "https://nowcoast.noaa.gov/arcgis/rest/services/nowcoast/wwa_meteoceanhydro_longduration_hazards_time/MapServer/32",
+                  popupTemplate: noaaPopupTemplate,
+                  opacity: 0.15
+                });
+          var temperatureLayer = new FeatureLayer({
+                  title: "Temperature Hazard",
+                  url: "https://nowcoast.noaa.gov/arcgis/rest/services/nowcoast/wwa_meteoceanhydro_longduration_hazards_time/MapServer/35",
+                  popupTemplate: noaaPopupTemplate,
+                  opacity: 0.15
+                });
+          var wildfireLayer = new FeatureLayer({
+                  title: "Wildfire Hazard",
+                  url: "https://nowcoast.noaa.gov/arcgis/rest/services/nowcoast/wwa_meteoceanhydro_longduration_hazards_time/MapServer/39",
+                  popupTemplate: noaaPopupTemplate,
+                  opacity: 0.15
+                });
+            
+          // Create the composite group layer
+          var noaaWarnings = new GroupLayer({
+            title: "Active Warning Areas",
+            layers: [
+              flashFloodLayer, thunderLayer, windLayer, tornadoLayer, floodLayer, snowLayer,temperatureLayer, wildfireLayer 
+            ],
+            listMode: "hide-children"
+            });
+      
+          // Construct the map object 
+          var map = new Map({
+              basemap: "dark-gray",
+              layers: [radarImagery, noaaWarnings, streetClosures] //wazeAccidents was previously on here, but Esri has since locked down their emergency Waze feed
+            });
+      
+          // Create the map's view (i.e. where the map renders within on the page)
+          var view = new MapView({
+              container: "viewDiv",
+              map: map,
+              popup: {
+                dockEnabled: true,
+              },
+              zoom: 11,
+              center: [-80.84, 35.22]
+            });
+            
+          // Add a legend instance to the panel of a
+          // ListItem in a LayerList instance
+          const layerList = new LayerList({
+            view: view,
+            container: document.createElement("div"),
+            listItemCreatedFunction: function(event) {
+              const item = event.item;
+              item.panel = {
+                content: "legend",
+                open: false 
+              };
+            }
+          });
+
+          // Create the funcitonality for expanding on the Legend widget 
+          var legendExpand = new Expand({
+              view: view,
+              content: layerList
+            });
+            
+          view.ui.add(legendExpand, "top-right");
+            
+          // Create the Search widget
+          var searchWidget = new Search({
+            view: view
+            });
+      
+          // Add the search widget to the top right corner of the view
+          view.ui.add(searchWidget, {
+              position: "top-left"
+            });
+            
+          view.ui.move("zoom", "bottom-left");
+            
+          view.when(function(){
+              createArray(updateLayer)
+            });
+            
+          // Set the refresh interval of the stream-gauge layer
+          setInterval(function(){
+              createArray(updateLayer);
+              },60000);
+          
+          // This is a function to get live (one minute delay) data from the USGS
+          // and construct client-side graphics using the parsed JSON and then
+          // convert the graphic into a fully functional layer
+          function createArray(callback) {
+              $.getJSON( url, function( data ) {
+                features = [];
+              for (i=0; i < data.value.timeSeries.length; i++){
+                var feature = {
+                  geometry: {
+                    type: "point",
+                    x: null,
+                    y: null
+                  },
+                  attributes: {
+                  OID: null,
+                  siteName: null,
+                  collectionDate: null,
+                  waterLevel: null
+                  }
+                };
+                feature.geometry.x = data.value.timeSeries[i].sourceInfo.geoLocation.geogLocation.longitude;
+                feature.geometry.y = data.value.timeSeries[i].sourceInfo.geoLocation.geogLocation.latitude;
+                feature.attributes.OID = i;
+                feature.attributes.siteName = data.value.timeSeries[i].sourceInfo.siteName;
+                feature.attributes.collectionDate = data.value.timeSeries[i].values[0].value[0].dateTime;
+                feature.attributes.waterLevel = data.value.timeSeries[i].values[0].value[0].value;
+                features.push(feature);
+              }
+                
+                stringFeatures = JSON.stringify(features);
+                callback();
+              });
+            };
+      
+            // This function uses the updated feature array (features) above to create
+            // a new layer and remove the existing layer from the map.
+          var updateLayer = function (constructLegend) {
+              map.remove(waterLevelLayer);
+              waterLevelLayer = new FeatureLayer({
+                title: "Water Levels",
+                source: features,
+                fields: fields,
+                objectIdField: "OID",
+                renderer: waterRenderer,
+                spatialReference: {
+                  wkid: 4326
+                },
+                geometryType: "point",
+                popupTemplate: waterLevelPopupTemplate
+              });
+              
+              map.add(waterLevelLayer);
+              return waterLevelLayer;
+            };
+      
+        });
+        </script>
+
+    </body>
+</html>
